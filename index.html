@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radio lectora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --page:#F6F6E7;
+  --casing:#FFFFFF;
+  --casing-edge:#E6E3CF;
+  --ink:#141414;
+  --dim:#5E5D57;
+  --paper:#F6F6E7;
+  --paper-ink:#141414;
+  --dial:#F6F6E7;
+  --dial-ink:#141414;
+  --red:#CD171C;
+  --salmon:#E8634B;
+  --line:rgba(20,20,20,.14);
+  --btn:#141414;
+  --btn-ink:#FFFFFF;
+  --chip-on:#CD171C;
+  --chip-on-ink:#FFFFFF;
+  --sent:#2E7D4F;
+  --serif:"Abril Fatface","Rockwell",Georgia,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --page:#121216; --casing:#1D1D25; --casing-edge:#2A2A34;
+    --ink:#F6F6E7; --dim:#B5B4A8; --paper:#121216; --paper-ink:#F6F6E7;
+    --line:rgba(246,246,231,.16); --btn:#F6F6E7; --btn-ink:#141414; --sent:#7FD3A1;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#121216; --casing:#1D1D25; --casing-edge:#2A2A34;
+  --ink:#F6F6E7; --dim:#B5B4A8; --paper:#121216; --paper-ink:#F6F6E7;
+  --line:rgba(246,246,231,.16); --btn:#F6F6E7; --btn-ink:#141414; --sent:#7FD3A1;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0;min-height:100%;
+  background:var(--page);color:var(--ink);
+  font-family:"Lato","Helvetica Neue",Arial,sans-serif;
+  font-size:16px;line-height:1.45;
+  display:flex;justify-content:center;
+  padding:clamp(16px,4vw,48px) clamp(12px,3vw,32px);
+}
+.radio{
+  width:100%;max-width:760px;
+  background:var(--casing);color:var(--ink);
+  border:1px solid var(--casing-edge);
+  border-top:8px solid var(--red);
+  border-radius:20px;
+  padding:clamp(20px,4vw,36px);
+  box-shadow:0 20px 44px -28px rgba(60,20,10,.35);
+}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+header h1{margin:0;font-weight:900;font-size:clamp(34px,6vw,52px);letter-spacing:-.035em;line-height:1}
+header p{margin:.5em 0 0;color:var(--dim);max-width:46ch}
+
+/* Dial */
+.dial{
+  margin:24px 0 22px;border-radius:14px;
+  background:var(--dial);color:var(--dial-ink);
+  position:relative;overflow:hidden;
+  box-shadow:inset 0 2px 8px rgba(0,0,0,.10);
+  border:1px solid var(--casing-edge);
+  transition:box-shadow .5s ease;
+}
+.dial.locked{box-shadow:inset 0 2px 8px rgba(0,0,0,.06), 0 0 0 4px var(--salmon)}
+.dial-top{display:flex;justify-content:space-between;align-items:center;padding:12px 18px 0}
+.readout{font-family:var(--serif);font-size:clamp(28px,5vw,38px);font-variant-numeric:tabular-nums;line-height:1}
+.readout small{font-family:"Lato",Arial,sans-serif;font-weight:900;font-size:.42em;margin-left:.3em;color:var(--red)}
+.lamp{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.lamp i{width:12px;height:12px;border-radius:50%;background:#D9D9C8;transition:background .3s, box-shadow .3s}
+.dial.locked .lamp i{background:var(--salmon);box-shadow:0 0 10px 2px rgba(232,99,75,.8)}
+.scale{position:relative;height:70px;margin:4px 18px 10px}
+.tick{position:absolute;bottom:22px;width:1.5px;background:var(--dial-ink);transform:translateX(-50%)}
+.tick.major{height:20px}
+.tick.minor{height:10px;opacity:.5}
+.num{position:absolute;bottom:0;transform:translateX(-50%);font-size:14px;font-family:var(--serif);font-variant-numeric:tabular-nums}
+.needle{position:absolute;top:-6px;bottom:18px;width:3px;background:var(--red);border-radius:2px;transform:translateX(-50%);left:67.5%}
+
+/* Form */
+label.field{display:block;font-weight:700;font-size:15px;margin-bottom:6px}
+textarea{
+  width:100%;min-height:150px;resize:vertical;
+  background:var(--paper);color:var(--paper-ink);
+  border:1px solid var(--casing-edge);border-radius:10px;
+  padding:14px 16px;font:inherit;font-size:17px;line-height:1.55;
+}
+.controls{display:grid;grid-template-columns:1fr;gap:16px;margin-top:18px}
+@media (min-width:620px){.controls{grid-template-columns:1.4fr 1fr 1fr}}
+select,input[type=search]{
+  width:100%;background:var(--paper);color:var(--paper-ink);
+  border:1px solid var(--casing-edge);border-radius:8px;padding:11px 12px;font:inherit;font-size:15px;
+}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;accent-color:var(--red);min-width:0}
+.val{font-variant-numeric:tabular-nums;font-weight:700;min-width:3.6em;text-align:right}
+.check{display:flex;gap:10px;align-items:center;margin-top:16px;color:var(--dim);font-size:15px}
+.check input{width:18px;height:18px;accent-color:var(--red)}
+.intro{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-top:16px}
+.intro .check{margin-top:0}
+.intro input[type=text]{flex:1 1 220px;background:var(--paper);color:var(--paper-ink);border:1px solid var(--casing-edge);border-radius:8px;padding:9px 12px;font:inherit;font-size:15px}
+
+.actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;align-items:center}
+button{font:inherit;font-size:16px;cursor:pointer;border-radius:5px;padding:12px 24px;border:1.5px solid transparent;color:inherit;background:none}
+.play{background:var(--btn);color:var(--btn-ink);font-weight:700;padding:13px 34px;box-shadow:4px 5px 10px rgba(0,0,0,.2);transition:transform .15s}
+.play:hover:not(:disabled){transform:translateY(-2px)}
+.ghost{border-color:var(--line);color:var(--ink)}
+.ghost:hover:not(:disabled){border-color:var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.status{margin:18px 0 0;min-height:1.5em;color:var(--dim);font-size:15px}
+.status.warn{color:var(--red);font-weight:700}
+.hint{margin-top:6px;font-size:13px;color:var(--dim)}
+
+/* Pistas */
+.toggle-pistas{font-weight:700;border-color:var(--red);color:var(--red);padding:10px 20px}
+.toggle-pistas[aria-expanded="true"]{background:var(--red);color:#fff}
+.pistas{margin:22px 0 0;border:1px solid var(--casing-edge);border-radius:14px;padding:16px;background:var(--paper)}
+.pistas[hidden]{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{padding:7px 14px;border-radius:999px;border:1.5px solid var(--line);font-size:14px;font-weight:700}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink);border-color:var(--chip-on)}
+.pistas-tools{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-bottom:12px}
+.pistas-tools input{flex:1 1 220px}
+.link{padding:6px 4px;font-size:13px;color:var(--dim);text-decoration:underline;white-space:nowrap}
+.lista{list-style:none;margin:0;padding:0;max-height:380px;overflow-y:auto;border-top:1px solid var(--line)}
+.lista li{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-bottom:1px solid var(--line)}
+.lista .txt{flex:1;font-size:15px;line-height:1.45;cursor:pointer;text-align:left;padding:0;border:0;border-radius:4px}
+.lista .txt:hover{color:var(--red)}
+.lista .meta{display:block;font-size:12px;color:var(--dim);margin-top:4px}
+.lista .meta .ok{color:var(--sent);font-weight:700}
+.lista li.sent .txt{color:var(--dim)}
+.lista .leer{flex:none;padding:7px 14px;font-size:14px;font-weight:700;background:var(--btn);color:var(--btn-ink)}
+.vacio{padding:16px 2px;color:var(--dim);font-size:15px}
+@media (prefers-reduced-motion: reduce){.dial{transition:none}}
+</style>
+</head>
+<body>
+<main class="radio">
+  <header>
+    <div>
+      <h1>Radio lectora</h1>
+      <p>Pegá tu texto o elegí una pista, y escuchalo como si saliera de la radio: con sintonía al principio y al final.</p>
+    </div>
+    <button class="toggle-pistas" id="togglePistas" aria-expanded="false" aria-controls="pistas">Ver pistas</button>
+  </header>
+
+  <section class="pistas" id="pistas" hidden aria-label="Pistas">
+    <div class="chips" id="chips"></div>
+    <div class="pistas-tools">
+      <input type="search" id="buscar" placeholder="Buscar en las pistas" aria-label="Buscar en las pistas">
+      <button class="link" id="limpiar">Borrar marcas de enviadas</button>
+    </div>
+    <ul class="lista" id="lista"></ul>
+  </section>
+
+  <section class="dial" id="dial" aria-label="Dial de la radio">
+    <div class="dial-top">
+      <div class="readout" id="readout" aria-live="off">101.5<small>FM</small></div>
+      <div class="lamp"><i></i><span id="lampText">Sin señal</span></div>
+    </div>
+    <div class="scale" id="scale"><div class="needle" id="needle"></div></div>
+  </section>
+
+  <label class="field" for="texto">Texto a leer</label>
+  <textarea id="texto">Buenas tardes a todos los que nos están escuchando. Son las cinco de la tarde y arrancamos con lo más importante del día. Quédense con nosotros, que tenemos mucho para contarles.</textarea>
+
+  <div class="controls">
+    <div>
+      <label class="field" for="voz">Voz</label>
+      <select id="voz"><option>Cargando voces…</option></select>
+      <div class="hint" id="vozHint"></div>
+    </div>
+    <div>
+      <label class="field" for="vel">Velocidad</label>
+      <div class="slider-row"><input type="range" id="vel" min="0.7" max="1.6" step="0.05" value="1.1"><span class="val" id="velVal">1.10×</span></div>
+    </div>
+    <div>
+      <label class="field" for="dur">Sintonía</label>
+      <div class="slider-row"><input type="range" id="dur" min="1.5" max="8" step="0.5" value="4"><span class="val" id="durVal">4 s</span></div>
+    </div>
+  </div>
+
+  <div class="intro">
+    <label class="check"><input type="checkbox" id="introOn" checked> Empezar siempre con</label>
+    <input type="text" id="introTxt" value="¡Atención, hermanas!" aria-label="Frase de entrada">
+  </div>
+  <label class="check"><input type="checkbox" id="soplido"> Dejar un soplido suave de radio mientras habla</label>
+
+  <div class="actions">
+    <button class="play" id="play">Sintonizar y leer</button>
+    <button class="ghost" id="stop" disabled>Detener</button>
+    <button class="ghost" id="probar">Probar voz</button>
+  </div>
+  <p class="status" id="status" role="status"></p>
+</main>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const DIAL_MIN = 88, DIAL_MAX = 108, TARGET = 0.675; // 101.5 FM
+
+  /* ---------- Dial ---------- */
+  const scale = $('scale'), needle = $('needle');
+  for (let f = DIAL_MIN; f <= DIAL_MAX; f++) {
+    const p = (f - DIAL_MIN) / (DIAL_MAX - DIAL_MIN) * 100;
+    const t = document.createElement('div');
+    t.className = 'tick ' + (f % 2 === 0 ? 'major' : 'minor');
+    t.style.left = p + '%';
+    scale.appendChild(t);
+    if (f % 4 === 0) {
+      const n = document.createElement('div');
+      n.className = 'num'; n.style.left = p + '%'; n.textContent = f;
+      scale.appendChild(n);
+    }
+  }
+  function setNeedle(pos){
+    pos = Math.max(0, Math.min(1, pos));
+    needle.style.left = (pos * 100) + '%';
+    const f = DIAL_MIN + pos * (DIAL_MAX - DIAL_MIN);
+    $('readout').innerHTML = f.toFixed(1) + '<small>FM</small>';
+  }
+  function setLocked(on, text){
+    $('dial').classList.toggle('locked', on);
+    $('lampText').textContent = text;
+  }
+  setNeedle(TARGET);
+
+  /* ---------- Voces ---------- */
+  const FEMALE = ['elena','dalia','sabina','paulina','valentina','camila','salome','salomé','catalina','paola','paloma','karla','ximena','marisol','renata','angelica','angélica','luciana','soledad','francisca','helena','hilda','laura','monica','mónica','lucia','lucía','abril','elvira','candela','beatriz','andrea','gabriela','isabel','isabela','tania','larissa','maria','maría','sofia','sofía','martina','yolanda','marta','esperanza','carmen','lupe','juana','belen','belén','rocio','rocío','vera','luna','nora','irene','triana','estrella','mia','mía','natalia'];
+  const MALE = ['tomas','tomás','jorge','diego','juan','carlos','gonzalo','lorenzo','alvaro','álvaro','pablo','raul','raúl','alonso','emilio','gerardo','andres','andrés','mateo','rodrigo','federico','roberto','sebastian','sebastián','yago','alberto','arnau','dario','darío','liberto','luciano','teo','saul','saúl','nil','guillermo','jose','josé','alex','enrique','manuel','mario','rafael','sergio','victor','víctor','eddy','reed','rocko','grandpa','jaime','nicolas','nicolás','marcelo','gilberto','cristian'];
+  const COUNTRY = {AR:'Argentina',UY:'Uruguay',PY:'Paraguay',CL:'Chile',BO:'Bolivia',PE:'Perú',EC:'Ecuador',CO:'Colombia',VE:'Venezuela',PA:'Panamá',CR:'Costa Rica',NI:'Nicaragua',HN:'Honduras',SV:'El Salvador',GT:'Guatemala',MX:'México',CU:'Cuba',DO:'Rep. Dominicana',PR:'Puerto Rico',US:'Estados Unidos','419':'Latinoamérica',ES:'España'};
+
+  function region(v){
+    const m = (v.lang || '').replace('_','-').split('-');
+    return (m[1] || '').toUpperCase();
+  }
+  function words(name){ return name.toLowerCase().normalize('NFC').split(/[\s\-()_,]+/); }
+  function gender(v){
+    const w = words(v.name);
+    if (/google español de estados unidos/i.test(v.name)) return 'f';
+    if (w.some(x => MALE.includes(x))) return 'm';
+    if (w.some(x => FEMALE.includes(x))) return 'f';
+    if (/female|mujer/i.test(v.name)) return 'f';
+    if (/male|hombre/i.test(v.name)) return 'm';
+    return '?';
+  }
+  function score(v){
+    const r = region(v); let s = 0;
+    if (r === 'AR') s += 100; else if (r === 'UY') s += 90;
+    else if (r === 'ES') s += 5;
+    else if (r === '') s += 25;
+    else s += 70;
+    const g = gender(v);
+    if (g === 'f') s += 60; else if (g === 'm') s -= 80;
+    if (/natural|online|neural|premium|enhanced|mejorada/i.test(v.name)) s += 15;
+    return s;
+  }
+  function isLatam(v){ const r = region(v); return r && r !== 'ES'; }
+
+  let voices = [];
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem('radio-lectora') || '{}') || {}; } catch(e) { saved = {}; }
+
+  function loadVoices(){
+    if (!('speechSynthesis' in window)) {
+      $('voz').innerHTML = '<option>Este navegador no tiene voces</option>';
+      say('Este navegador no permite leer en voz alta. Abrí la página en Chrome, Edge o Safari.', true);
+      $('play').disabled = true; $('probar').disabled = true;
+      return;
+    }
+    const all = speechSynthesis.getVoices().filter(v => /^es/i.test(v.lang));
+    if (!all.length) {
+      $('voz').innerHTML = '<option value="">Voz en español del sistema</option>';
+      $('vozHint').textContent = 'No encontré voces en español instaladas. Se usará la del sistema; en Edge suelen aparecer voces argentinas naturales.';
+      voices = [];
+      return;
+    }
+    voices = all.sort((a,b) => score(b) - score(a));
+    const rec = voices.filter(v => isLatam(v) && gender(v) === 'f');
+    const rest = voices.filter(v => !rec.includes(v));
+    const label = v => {
+      const c = COUNTRY[region(v)] || v.lang;
+      const g = gender(v) === 'f' ? 'mujer' : gender(v) === 'm' ? 'hombre' : '';
+      return v.name.replace(/^Microsoft\s+/,'').replace(/\s*-\s*Spanish.*$/,'') + ' (' + c + (g ? ', ' + g : '') + ')';
+    };
+    const sel = $('voz'); sel.innerHTML = '';
+    const addGroup = (title, list) => {
+      if (!list.length) return;
+      const g = document.createElement('optgroup'); g.label = title;
+      list.forEach(v => { const o = document.createElement('option'); o.value = v.voiceURI; o.textContent = label(v); g.appendChild(o); });
+      sel.appendChild(g);
+    };
+    addGroup('Mujeres latinoamericanas', rec);
+    addGroup('Otras voces en español', rest);
+    if (saved.voice && voices.some(v => v.voiceURI === saved.voice)) sel.value = saved.voice;
+    else sel.value = voices[0].voiceURI;
+    $('vozHint').textContent = rec.length
+      ? (rec.some(v => region(v) === 'AR') ? '' : 'No hay voz argentina en este equipo; elegí la latinoamericana que más te guste.')
+      : 'Este equipo no tiene voces de mujer latinoamericanas. En Edge vas a encontrar varias naturales (Elena, de Argentina, por ejemplo).';
+  }
+  function currentVoice(){
+    const uri = $('voz').value;
+    return voices.find(v => v.voiceURI === uri) || null;
+  }
+  if ('speechSynthesis' in window) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    setTimeout(loadVoices, 600);
+  } else loadVoices();
+
+  /* ---------- Ajustes ---------- */
+  if (saved.rate) $('vel').value = saved.rate;
+  if (saved.dur) $('dur').value = saved.dur;
+  if (saved.hiss) $('soplido').checked = true;
+  const showVals = () => {
+    $('velVal').textContent = Number($('vel').value).toFixed(2) + '×';
+    $('durVal').textContent = Number($('dur').value).toString().replace('.', ',') + ' s';
+  };
+  showVals();
+  function persist(){
+    try { localStorage.setItem('radio-lectora', JSON.stringify({voice:$('voz').value, rate:$('vel').value, dur:$('dur').value, hiss:$('soplido').checked})); } catch(e) {}
+  }
+  ['vel','dur'].forEach(id => $(id).addEventListener('input', () => { showVals(); persist(); }));
+  $('voz').addEventListener('change', persist);
+  $('soplido').addEventListener('change', persist);
+
+  function say(msg, warn){ const s = $('status'); s.textContent = msg; s.classList.toggle('warn', !!warn); }
+
+  /* ---------- Audio: ruido de sintonización ---------- */
+  let ctx = null, master = null, active = [], runId = 0, anim = null;
+
+  function ensureCtx(){
+    if (!ctx) {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume();
+    master.gain.cancelScheduledValues(ctx.currentTime);
+    master.gain.setValueAtTime(0.9, ctx.currentTime);
+  }
+
+  function noiseBuffer(sec, crackles){
+    const sr = ctx.sampleRate, len = Math.floor(sr * sec);
+    const b = ctx.createBuffer(1, len, sr), d = b.getChannelData(0);
+    let b0 = 0, b1 = 0, b2 = 0;
+    for (let i = 0; i < len; i++) {
+      const w = Math.random() * 2 - 1;
+      b0 = 0.99765 * b0 + w * 0.0990460;
+      b1 = 0.96300 * b1 + w * 0.2965164;
+      b2 = 0.57000 * b2 + w * 1.0526913;
+      d[i] = (b0 + b1 + b2 + w * 0.1848) * 0.11 + w * 0.35;
+    }
+    if (crackles) {
+      let i = 0;
+      while (i < len) {
+        i += Math.floor(Math.random() * sr * 0.1) + 40;
+        if (i >= len) break;
+        const n = 15 + Math.floor(Math.random() * 380);
+        const a = (Math.random() * 0.9 + 0.2) * (Math.random() < 0.5 ? -1 : 1);
+        for (let k = 0; k < n && i + k < len; k++) d[i + k] += a * Math.exp(-k / (n / 4)) * (Math.random() * 0.6 + 0.4);
+      }
+    }
+    return b;
+  }
+
+  // Línea de tiempo pensada para la entrada; la salida es la misma, invertida.
+  function buildTimeline(dur){
+    const hiss = [[0,0],[Math.min(0.3, dur*0.12), 0.45]];
+    const bp = [[0, 2200]];
+    const wf = [[0, 3000]], wg = [[0, 0]];
+    const st = [[0, 0]];
+    const nd = [];
+    const start = 0.05 + Math.random() * 0.15;
+    const lockAt = dur * 0.78;
+    // posición de la aguja: barrido con pequeñas pausas
+    const steps = 9;
+    for (let k = 0; k <= steps; k++) {
+      const t = lockAt * k / steps;
+      const ease = 1 - Math.pow(1 - k / steps, 2);
+      const jitter = k === steps ? 0 : (Math.random() - 0.5) * 0.04;
+      nd.push([t, start + (TARGET + 0.012 - start) * ease + jitter]);
+    }
+    nd.push([lockAt + (dur - lockAt) * 0.5, TARGET - 0.004]);
+    nd.push([dur, TARGET]);
+
+    // estaciones que se cruzan en el camino
+    const passes = dur >= 3 ? [0.32, 0.56] : [0.42];
+    for (let t = 0.3; t < lockAt; t += 0.14 + Math.random() * 0.16) {
+      bp.push([t, 700 + Math.random() * 3200]);
+      const near = passes.some(p => Math.abs(t - p * dur) < 0.35);
+      hiss.push([t, near ? 0.14 : 0.32 + Math.random() * 0.3]);
+    }
+    passes.forEach(p => {
+      const c = p * dur, w = Math.min(0.45, dur * 0.1);
+      wg.push([c - w, 0], [c - w * 0.6, 0.05], [c + w * 0.6, 0.05], [c + w, 0]);
+      wf.push([c - w, 3600], [c, 70 + Math.random() * 80], [c + w, 3400]);
+      st.push([c - w * 0.7, 0], [c, 0.34], [c + w * 0.7, 0]);
+    });
+    // enganche final: el silbido baja hasta desaparecer
+    wf.push([lockAt, 2600], [dur * 0.95, 22]);
+    wg.push([lockAt, 0.06], [dur * 0.95, 0.025], [dur, 0]);
+    hiss.push([lockAt, 0.36], [dur * 0.92, 0.08], [dur, 0]);
+    bp.push([dur, 1800]);
+    st.push([dur, 0]);
+    const sortF = a => a.sort((x, y) => x[0] - y[0]);
+    return {hiss:sortF(hiss), bp:sortF(bp), wf:sortF(wf), wg:sortF(wg), st:sortF(st), nd:sortF(nd)};
+  }
+  function flip(kf, dur){ return kf.map(([t, v]) => [dur - t, v]).sort((a, b) => a[0] - b[0]); }
+  function applyKF(param, kf, t0){
+    param.cancelScheduledValues(t0);
+    param.setValueAtTime(kf[0][1], t0 + kf[0][0]);
+    for (let i = 1; i < kf.length; i++) param.linearRampToValueAtTime(kf[i][1], t0 + kf[i][0]);
+  }
+  function interp(kf, t){
+    if (t <= kf[0][0]) return kf[0][1];
+    for (let i = 1; i < kf.length; i++) {
+      if (t <= kf[i][0]) {
+        const [ta, va] = kf[i-1], [tb, vb] = kf[i];
+        return va + (vb - va) * ((t - ta) / ((tb - ta) || 1));
+      }
+    }
+    return kf[kf.length - 1][1];
+  }
+
+  function playStatic(dur, mode, myRun){
+    return new Promise(resolve => {
+      if (myRun !== runId) return resolve();
+      ensureCtx();
+      let tl = buildTimeline(dur);
+      if (mode === 'out') for (const k in tl) tl[k] = flip(tl[k], dur);
+      const t0 = ctx.currentTime + 0.05;
+
+      const out = ctx.createGain(); out.connect(master);
+
+      const src = ctx.createBufferSource(); src.buffer = noiseBuffer(dur + 0.3, true);
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 180;
+      const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.55;
+      const hissG = ctx.createGain();
+      src.connect(hp).connect(bp).connect(hissG).connect(out);
+      applyKF(bp.frequency, tl.bp, t0);
+      applyKF(hissG.gain, tl.hiss, t0);
+
+      const osc = ctx.createOscillator(); osc.type = 'sine';
+      const wg = ctx.createGain();
+      osc.connect(wg).connect(out);
+      applyKF(osc.frequency, tl.wf, t0);
+      applyKF(wg.gain, tl.wg, t0);
+
+      // emisoras lejanas: murmullo apagado y entrecortado
+      const src2 = ctx.createBufferSource(); src2.buffer = noiseBuffer(dur + 0.3, false);
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 850; lp.Q.value = 4;
+      const am = ctx.createGain(); am.gain.value = 0.5;
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 5.5;
+      const lfoG = ctx.createGain(); lfoG.gain.value = 0.5;
+      lfo.connect(lfoG).connect(am.gain);
+      const stG = ctx.createGain();
+      src2.connect(lp).connect(am).connect(stG).connect(out);
+      applyKF(stG.gain, tl.st, t0);
+
+      [src, osc, src2, lfo].forEach(n => { n.start(t0); n.stop(t0 + dur + 0.05); active.push(n); });
+
+      const startMs = performance.now() + 50;
+      cancelAnimationFrame(anim);
+      const frame = now => {
+        const t = (now - startMs) / 1000;
+        setNeedle(interp(tl.nd, Math.max(0, t)));
+        if (t < dur && myRun === runId) anim = requestAnimationFrame(frame);
+      };
+      anim = requestAnimationFrame(frame);
+
+      let done = false;
+      const finish = () => { if (done) return; done = true; clearInterval(watch); resolve(); };
+      const watch = setInterval(() => { if (myRun !== runId) finish(); }, 80);
+      setTimeout(finish, dur * 1000 + 80);
+    });
+  }
+
+  let hissNode = null;
+  function startBackgroundHiss(){
+    ensureCtx();
+    const src = ctx.createBufferSource(); src.buffer = noiseBuffer(4, true); src.loop = true;
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2600; bp.Q.value = 0.5;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, ctx.currentTime); g.gain.linearRampToValueAtTime(0.045, ctx.currentTime + 0.6);
+    src.connect(bp).connect(g).connect(master);
+    src.start(); active.push(src);
+    hissNode = {src, g};
+  }
+  function stopBackgroundHiss(){
+    if (!hissNode) return;
+    const {src, g} = hissNode; hissNode = null;
+    try { g.gain.cancelScheduledValues(ctx.currentTime); g.gain.setValueAtTime(g.gain.value, ctx.currentTime); g.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3); src.stop(ctx.currentTime + 0.35); } catch(e) {}
+  }
+
+  /* ---------- Lectura ---------- */
+  function chunk(text){
+    const clean = text.replace(/\s+\n/g, '\n').trim();
+    const parts = clean.split(/(?<=[.!?;:…])\s+|\n+/).filter(Boolean);
+    const out = [];
+    let cur = '';
+    const push = s => { if (s.trim()) out.push(s.trim()); };
+    parts.forEach(p => {
+      if (p.length > 220) {
+        push(cur); cur = '';
+        let buf = '';
+        p.split(/(?<=,)\s+|\s+/).forEach(w => {
+          if ((buf + ' ' + w).length > 200) { push(buf); buf = w; } else buf = buf ? buf + ' ' + w : w;
+        });
+        push(buf);
+      } else if ((cur + ' ' + p).length > 220) { push(cur); cur = p; }
+      else cur = cur ? cur + ' ' + p : p;
+    });
+    push(cur);
+    return out;
+  }
+
+  const keep = [];
+  function speakAll(text, voice, rate, myRun){
+    return new Promise(resolve => {
+      const parts = chunk(text);
+      let i = 0;
+      const next = () => {
+        if (myRun !== runId || i >= parts.length) return resolve();
+        const u = new SpeechSynthesisUtterance(parts[i++]);
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = 'es-AR';
+        u.rate = rate; u.pitch = 1;
+        u.onend = next;
+        u.onerror = e => {
+          if (e.error === 'not-allowed') say('El navegador bloqueó la voz. Tocá de nuevo el botón.', true);
+          next();
+        };
+        keep.push(u); if (keep.length > 20) keep.shift();
+        speechSynthesis.speak(u);
+      };
+      next();
+    });
+  }
+
+  function setBusy(b){
+    $('play').disabled = b; $('probar').disabled = b; $('stop').disabled = !b;
+  }
+
+  async function run(){
+    const text = $('texto').value.trim();
+    if (!text) { say('Escribí o pegá un texto para leer.', true); $('texto').focus(); return; }
+    const myRun = ++runId;
+    setBusy(true);
+    speechSynthesis.cancel();
+    // desbloquea la voz en iPhone/iPad, que exige empezar dentro del toque
+    try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch(e) {}
+    ensureCtx();
+    const dur = Number($('dur').value);
+    const rate = Number($('vel').value);
+    const voice = currentVoice();
+
+    setLocked(false, 'Buscando…'); say('Sintonizando…');
+    await playStatic(dur, 'in', myRun);
+    if (myRun !== runId) return;
+
+    setLocked(true, 'En el aire'); say('Leyendo…');
+    if ($('soplido').checked) startBackgroundHiss();
+    await new Promise(r => setTimeout(r, 150));
+    const intro = $('introOn').checked ? $('introTxt').value.trim() : '';
+    await speakAll(intro ? intro + ' ' + text : text, voice, rate, myRun);
+    stopBackgroundHiss();
+    if (myRun !== runId) return;
+
+    setLocked(false, 'Perdiendo señal'); say('Cerrando…');
+    await new Promise(r => setTimeout(r, 200));
+    await playStatic(dur, 'out', myRun);
+    if (myRun !== runId) return;
+
+    setLocked(false, 'Sin señal'); say('Listo.');
+    setBusy(false);
+  }
+
+  function stop(){
+    runId++;
+    try { speechSynthesis.cancel(); } catch(e) {}
+    stopBackgroundHiss();
+    if (ctx) {
+      const now = ctx.currentTime;
+      master.gain.cancelScheduledValues(now);
+      master.gain.setValueAtTime(master.gain.value, now);
+      master.gain.linearRampToValueAtTime(0, now + 0.15);
+      active.forEach(n => { try { n.stop(now + 0.2); } catch(e) {} });
+      active = [];
+    }
+    cancelAnimationFrame(anim);
+    setLocked(false, 'Sin señal'); setNeedle(TARGET);
+    say('Detenido.');
+    setBusy(false);
+  }
+
+  $('play').addEventListener('click', run);
+
+  /* Frase de entrada */
+  try {
+    const ii = JSON.parse(localStorage.getItem('radio-intro') || 'null');
+    if (ii) { $('introOn').checked = !!ii.on; if (ii.txt) $('introTxt').value = ii.txt; }
+  } catch(e) {}
+  const guardarIntro = () => { try { localStorage.setItem('radio-intro', JSON.stringify({on:$('introOn').checked, txt:$('introTxt').value})); } catch(e) {} };
+  $('introOn').addEventListener('change', guardarIntro);
+  $('introTxt').addEventListener('input', guardarIntro);
+
+  /* ---------- Pistas ---------- */
+  const PISTAS = [
+    {sala:'General', items:[
+      'Sabemos que Minerva guardaba cosas importantes entre sus pertenencias',
+      'Confiamos en ustedes para resolver esta misión, sólo recuerden repartirse inteligentemente las tareas',
+      'Esa llave maestra parece abrir muchos candados',
+      'Recuerden que para abrir ese candado deben presionar el botón.',
+      'Creemos que Minerva escondió algunos secretos entre los objetos de la vitrina',
+      'Todas las llaves seguramente abran algo.'
+    ]},
+    {sala:'Teano', items:[
+      'Ese cable parece permitir tocar el monocordio. Quizás tocando las notas correctas descubran algún secreto',
+      'Quizás tocando las notas correctas descubran algún secreto, traten de calcularlas',
+      'Las notas fueron correctas. Tóquenlas de nuevo, pero esta vez más alejados del baúl',
+      'cuando toquen una nota correcta, se encenderá una luz verde. sí tocan una incorrecta, deberán empezar de nuevo',
+      'El monocordio necesita un cable para encenderse. Seguramente Minerva dejó uno en su oficina',
+      'Si se prenden las tres luces verdes, algo debería pasar',
+      'Los secretos de Minerva están en la caja fuerte.',
+      'Asegúrense de tener el código correcto, o la caja fuerte se bloqueará.',
+      'Correcto! el código es ese! pero parece que bloquearon la caja..',
+      'Correcto! el código es 1 6 1 8. parece que bloquearon la caja. Hay una llave para la caja fuerte muy bien escondida debajo del escritorio de minerva.',
+      'El candado se abre con el mismo código que la caja fuerte',
+      'Correcto! el código es 1, 6, 1, 8. Deben apretar, énter luego de colocar el número',
+      'Hemos notado que Tomas Laguitta bloqueó el monocordio',
+      'La calculadora les ayudará a hallar las notas musicales. La luz se encenderá al tocar las notas correctas en el monocordio',
+      'Hemos notado que Tomás Laguíta bloqueó el monocordio. Los primeros cuatro dígitos del número de oro les ayudarán a abrir la caja fuerte.',
+      'Asegúrense de colocar el puente bien perpendicular a los bordes, y el centro alineado con el número de la nota que van a tocar.',
+      'Asegúrense de mantener presionado el puente al tocar la nota',
+      'quizás la pista debajo del monocordio les permita abrir la caja fuerte',
+      'Parece que el monocordio fue intervenido por Tomás Laguita, ya no les será de ayuda'
+    ]},
+    {sala:'Hipatia', items:[
+      'Ese cono era uno de los juguetes favoritos de Minerva',
+      'Parece que el sol y la tierra tienen algo que ver con el cometa H. Quizás encontrando la estrella de paso puedan avanzar',
+      'Para hallar la estrella que abre el candado de Hipatia, deben seguir la trayectoria del cometa.',
+      'Sabemos que el nombre de una estrella permite abrir el candado. Necesitamos que encuentren la estrella por donde pasa el cometa usando el Mapa.',
+      'Recuerden separarse en las tareas.',
+      'El cono en la pared les puede ayudar a resolver un nuevo acertijo.',
+      'creemos que el número de oro las ayudará a abrir la caja fuerte',
+      'Asegúrense de tener el código correcto, o la caja fuerte se bloqueará',
+      'parece que bloquearon la caja. Hay una llave para la caja fuerte muy bien escondida debajo del escritorio de minerva.',
+      'parece que bloquearon la caja. Hay una llave para la caja fuerte muy bien escondida debajo del escritorio de minerva. El código para abrir el candado son los 4 primeros dígitos del número de oro',
+      'Escuchamos que encontraron la estrella correcta. Deben ingresar su nombre en el candado'
+    ]},
+    {sala:'Noether', items:[
+      'Quizás sea de ayuda armar ese mosaico sobre el tablero',
+      'Ese mosaico no parece estar muy bien. Deberia seguir cierta simetria. Inténtelo de nuevo.',
+      'Creemos que entre las piezas del mosaico se encontraba una llave, quizás les ayude.',
+      'La sopa de letras parece encajar en algún lugar',
+      'Las flechas deben respetar los ejes de simetría',
+      'Parece que el primer movimiento es hacia la derecha',
+      'Creo que la etiqueta puede indicar algo.',
+      'Asegúrense de que el cajón esté bien cerrado, y apoyen el imán en la insignia',
+      'La simetría las ayudarán a acomodar las flechas',
+      'Los conocimientos de Emi Néder las ayudará a descubrir la posición de las flechas.',
+      'El imán les ayudará a abrir el cajón con la insignia',
+      'El collar les permitirá abrir otro cajón.'
+    ]},
+    {sala:'Kovaleskaya', items:[
+      'Escuchamos que nombraron a ANNE. La mejor amiga de Sofía. Tal vez les ayude a desbloquear algún candado',
+      'Parece que la peonza les ayudará a abrir adonde está la guía de ajuste',
+      'La peonza las ayudará a obtener la guía',
+      'Para acceder a la guía de ajuste quizás deban buscar entre las pertenencias de Sofía Kovaleskaia',
+      {t:'Asegúrense de calibrar la Volvél a la posición inicial, y de seguir cuidadosamente las instrucciones de la guía en cada movimiento.', nueva:true},
+      'Asegúrense de calibrar la Volvél a la posición inicial, Creemos que cada vez que se mueven a la derecha, deben hacer el movimiento correspondiente a moverse a la derecha. Lo mismo para abajo.',
+      'Para configurar correctamente la volvel, asegúrense de comenzar en la posición inicial A, 1. y deben llegar a la posición C, 4.'
+    ]},
+    {sala:'Germain', items:[
+      'Los primos de Germain, Remi y Celin, los ayudarán a abrir ese libro',
+      'Parece que la clave para abrir el libro, son el tercer y el quinto primo de Yerméin',
+      'Recuerden que el uno no es primo',
+      'La máquina de Chadni genera dos figuras. Quizás encontrando la segunda puedan abrir algún candado',
+      'Creemos recordar que sofi esparcía muy poca arena sobre la máquina',
+      'Parece que esas figuras representan las frecuencias de la máquina de Chadni. Quizás las ayude a abrir uno de los candados',
+      'Ese cable pertenece al monocordio, no les permitirá usar la máquina de Chadni',
+      'Quizá recorriendo más lento las frecuencias más graves encuentren la figura faltante.',
+      'Hemos detectado que Minerva ha dejado una tarjeta con la figura faltante',
+      'Parece que Tomás Laguíta intervino la máquina de Chadni. Solo podrán utilizar las frecuencias que tienen a la vista.',
+      {t:'parece que la máquina de Cladni genera dos figuras. Quizá sus frecuencias les ayude a abrir un candado', nueva:true}
+    ]}
+  ];
+  const LETRAS = 'abcdefghijklmnopqrstuvwxyz';
+  const todas = [];
+  PISTAS.forEach((g, gi) => g.items.forEach((it, ii) => {
+    const o = typeof it === 'string' ? {t:it} : it;
+    todas.push({id:(gi+1) + LETRAS[ii], sala:g.sala, t:o.t, nueva:!!o.nueva});
+  }));
+
+  let enviadas = new Set();
+  try { enviadas = new Set(JSON.parse(localStorage.getItem('radio-pistas-enviadas') || '[]')); } catch(e) {}
+  const guardarEnviadas = () => { try { localStorage.setItem('radio-pistas-enviadas', JSON.stringify([...enviadas])); } catch(e) {} };
+
+  let salaActual = 'Todas';
+  const chips = $('chips');
+  ['Todas', ...PISTAS.map(g => g.sala)].forEach(n => {
+    const b = document.createElement('button');
+    b.className = 'chip'; b.textContent = n;
+    b.setAttribute('aria-pressed', n === salaActual);
+    b.addEventListener('click', () => {
+      salaActual = n;
+      [...chips.children].forEach(c => c.setAttribute('aria-pressed', c === b));
+      pintar();
+    });
+    chips.appendChild(b);
+  });
+
+  const norm = x => x.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  function pintar(){
+    const q = norm($('buscar').value.trim());
+    const lista = $('lista'); lista.innerHTML = '';
+    const vis = todas.filter(p => (salaActual === 'Todas' || p.sala === salaActual) && (!q || norm(p.t).includes(q)));
+    if (!vis.length) { lista.innerHTML = '<li class="vacio">No hay pistas que coincidan con la búsqueda.</li>'; return; }
+    vis.forEach(p => {
+      const li = document.createElement('li');
+      if (enviadas.has(p.id)) li.className = 'sent';
+      const txt = document.createElement('button');
+      txt.className = 'txt';
+      txt.title = 'Pasar al texto a leer';
+      txt.textContent = p.t;
+      const meta = document.createElement('span'); meta.className = 'meta';
+      meta.innerHTML = p.sala + ' ' + p.id.replace(/^\d/, '') + (p.nueva ? ' (sin grabar)' : '') + (enviadas.has(p.id) ? ' <span class="ok">✓ enviada</span>' : '');
+      txt.appendChild(meta);
+      txt.addEventListener('click', () => usar(p, false));
+      const leer = document.createElement('button');
+      leer.className = 'leer'; leer.textContent = 'Leer';
+      leer.setAttribute('aria-label', 'Leer ahora: ' + p.t);
+      leer.addEventListener('click', () => usar(p, true));
+      li.append(txt, leer);
+      lista.appendChild(li);
+    });
+  }
+  function usar(p, leerYa){
+    if ($('play').disabled) { say('Esperá que termine la lectura actual o tocá Detener.', true); return; }
+    $('texto').value = p.t;
+    if (leerYa) $('play').click();
+    else { say('Pista cargada. Tocá Sintonizar y leer cuando quieras.'); $('texto').focus(); }
+  }
+  $('play').addEventListener('click', () => {
+    const t = $('texto').value.trim();
+    const p = todas.find(x => x.t === t);
+    if (p && !enviadas.has(p.id)) { enviadas.add(p.id); guardarEnviadas(); pintar(); }
+  });
+  $('buscar').addEventListener('input', pintar);
+  $('limpiar').addEventListener('click', () => { enviadas.clear(); guardarEnviadas(); pintar(); });
+  $('togglePistas').addEventListener('click', e => {
+    const abierto = $('pistas').hidden;
+    $('pistas').hidden = !abierto;
+    e.currentTarget.setAttribute('aria-expanded', abierto);
+    e.currentTarget.textContent = abierto ? 'Ocultar pistas' : 'Ver pistas';
+  });
+  pintar();
+
+  $('stop').addEventListener('click', stop);
+  $('probar').addEventListener('click', () => {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance('Hola, ¿me escuchás bien? Así suena esta voz.');
+    const v = currentVoice();
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'es-AR';
+    u.rate = Number($('vel').value);
+    keep.push(u);
+    speechSynthesis.speak(u);
+  });
+})();
+</script>
+</body>
+</html>
